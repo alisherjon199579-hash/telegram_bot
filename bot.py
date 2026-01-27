@@ -3,7 +3,7 @@ from telebot import types
 
 TOKEN = "8252134065:AAEAHlbftOBZ-z7iWmqbknOo9QQAUC4ijRo" 
 bot = telebot.TeleBot(TOKEN)
-
+ADMIN_ID =  282155346
 # --- START ---
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -77,6 +77,28 @@ def get_address(message, name):
 def save_order(message, name, address):
     phone = message.text
 
+    order_text = (
+        f"🧾 YANGI BUYURTMA!\n\n"
+        f"👤 Ism: {name}\n"
+        f"🏠 Manzil: {address}\n"
+        f"📞 Telefon: {phone}"
+    )
+
+    # Faylga yozish
+    with open("orders.txt", "a", encoding="utf-8") as f:
+        f.write(order_text + "\n---\n")
+
+    # KLIENTGA javob
+    bot.send_message(
+        message.chat.id,
+        "✅ Buyurtmangiz qabul qilindi!\n"
+        "📞 G‘ijduvon Toza Gilam xodimlari tez orada siz bilan bog‘lanadi."
+    )
+
+    # SIZGA (ADMIN) XABAR BORADI
+    bot.send_message(ADMIN_ID, order_text)
+
+
     with open("orders.txt", "a", encoding="utf-8") as f:
         f.write(
             f"Ism: {name}\n"
@@ -92,4 +114,5 @@ def save_order(message, name, address):
     )
 
 print("Bot ishga tushdi...")
+
 bot.polling()

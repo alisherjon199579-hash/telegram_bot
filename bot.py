@@ -116,3 +116,43 @@ def save_order(message, name, address):
 print("Bot ishga tushdi...")
 
 bot.polling()
+@bot.message_handler(func=lambda m: True)
+def ai_operator(message):
+    text = message.text.lower()
+
+    if "narx" in text or "necha pul" in text:
+        bot.send_message(
+            message.chat.id,
+            "💰 Narxlarimiz:\n"
+            "1 m² = 10 000 so‘m\n\n"
+            "O‘lchamni yozsangiz, aniq hisoblab beraman 😊"
+        )
+
+    elif "qayer" in text or "manzil" in text:
+        bot.send_message(
+            message.chat.id,
+            "📍 Biz G‘ijduvon tumanida ishlaymiz.\n"
+            "Lokatsiya yuborsangiz, olib ketamiz 🚗"
+        )
+
+    elif "aloqa" in text or "telefon" in text:
+        bot.send_message(
+            message.chat.id,
+            "📞 Aloqa:\n93 841 89 00\n90 614 26 73"
+        )
+
+    elif "qanday" in text:
+        bot.send_message(
+            message.chat.id,
+            "🧼 Gilamlar avtomat usulda yuviladi,\n"
+            "dezinfeksiya qilinadi va quritiladi.\n"
+            "Sifat kafolatlanadi ✅"
+        )
+
+    else:
+        bot.send_message(
+            message.chat.id,
+            "🤖 Men AI operatorman.\n"
+            "Narx, aloqa yoki buyurtma haqida yozing 😊"
+        )
+

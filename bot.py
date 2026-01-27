@@ -115,8 +115,7 @@ def save_order(message, name, address):
 
 print("Bot ishga tushdi...")
 
-bot.polling()
-@bot.message_handler(func=lambda m: True)
+bot.polling()@bot.message_handler(func=lambda m: True)
 def ai_operator(message):
     text = message.text.lower()
 
@@ -155,4 +154,5 @@ def ai_operator(message):
             "🤖 Men AI operatorman.\n"
             "Narx, aloqa yoki buyurtma haqida yozing 😊"
         )
+
 

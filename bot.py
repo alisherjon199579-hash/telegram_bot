@@ -3,6 +3,8 @@ import re
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+import os
+
 BOT_TOKEN = os.getenv("8585152490:AAEUgPEFQIwRnHn9mLJyCy5JFTKuEpZUvgM")  # Railway Variables’dan olinadi
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -82,3 +84,4 @@ def callbacks(c):
         )
 
 bot.polling(none_stop=True) 
+

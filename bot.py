@@ -155,3 +155,4 @@ def ai_operator(message):
             "Narx, aloqa yoki buyurtma haqida yozing 😊"
         )
 
+

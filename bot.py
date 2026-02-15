@@ -1,87 +1,117 @@
-       import os
-import re
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot import types
 
-import os
+TOKEN = "8252134065:AAEAHlbftOBZ-z7iWmqbknOo9QQAUC4ijRo" 
+bot = telebot.TeleBot(TOKEN)
+ADMIN_ID =  282155346
+# --- START ---
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add("🧮 Gilam m² hisoblash")
+    markup.add("📦 Buyurtma berish")
+    markup.add("📞 Aloqa")
 
-BOT_TOKEN = os.getenv("8585152490:AAEUgPEFQIwRnHn9mLJyCy5JFTKuEpZUvgM")  # Railway Variables’dan olinadi
-bot = telebot.TeleBot(BOT_TOKEN)
-
-# Narxlar
-FUE = {
-    1000: 3500000,
-    2000: 7000000,
-    2500: 8000000,
-    3000: 9500000,
-    3500: 11000000,
-    4000: 12000000,
-    4500: 13000000,
-    5000: 14000000
-}
-
-PRP = 250000
-MESO = 300000
-
-users = {}
-
-def fmt(x):
-    return f"{x:,}".replace(",", ".")
-
-def keyboard():
-    kb = InlineKeyboardMarkup()
-    kb.add(
-        InlineKeyboardButton("➕ PRP", callback_data="prp"),
-        InlineKeyboardButton("➕ Mezoterapiya", callback_data="meso")
-    )
-    kb.add(InlineKeyboardButton("✅ Hisoblash", callback_data="done"))
-    return kb
-
-@bot.message_handler(func=lambda m: True)
-def handle_message(message):
-    text = message.text.lower()
-    uid = message.from_user.id
-
-    m = re.search(r'(\d+)\s*fue', text)
-    if not m:
-        return
-
-    graft = int(m.group(1))
-    if graft not in FUE:
-        bot.reply_to(message, "❌ Bu graft uchun narx yo‘q")
-        return
-
-    users[uid] = {"base": FUE[graft], "prp": 0, "meso": 0}
-
-    bot.reply_to(
-        message,
-        f"💉 FUE | 🧬 {graft} graft\n"
-        f"💰 Asosiy narx: {fmt(FUE[graft])} so‘m\n\n"
-        f"Qo‘shimcha xizmat tanlang 👇",
-        reply_markup=keyboard()
+    bot.send_message(
+        message.chat.id,
+        "Assalomu alaykum!\n"
+        "G‘ijduvon Toza Gilam yuvish botiga xush kelibsiz 😊\n\n"
+        "Kerakli bo‘limni tanlang 👇",
+        reply_markup=markup
     )
 
-@bot.callback_query_handler(func=lambda c: True)
-def callbacks(c):
-    uid = c.from_user.id
-    if uid not in users:
-        return
+# --- ALOQA ---
+@bot.message_handler(func=lambda m: m.text == "📞 Aloqa")
+def contact(message):
+    bot.send_message(
+        message.chat.id,
+        "📞 Aloqa raqamlari:\n"
+        "93 841 89 00\n"
+        "90 614 26 73"
+    )
 
-    if c.data == "prp":
-        users[uid]["prp"] = PRP
-        bot.answer_callback_query(c.id, "PRP qo‘shildi")
+# --- M2 HISOBLASH ---
+@bot.message_handler(func=lambda m: m.text == "🧮 Gilam m² hisoblash")
+def ask_size(message):
+    bot.send_message(
+        message.chat.id,
+        "Gilamning ENI va UZUNLIGINI metrda yozing.\n"
+        "Masalan: 2 3"
+    )
+    bot.register_next_step_handler(message, calculate_m2)
 
-    elif c.data == "meso":
-        users[uid]["meso"] = MESO
-        bot.answer_callback_query(c.id, "Mezoterapiya qo‘shildi")
+def calculate_m2(message):
+    try:
+        eni, uzunligi = map(float, message.text.split())
+        m2 = eni * uzunligi
+        narx = m2 * 10000  # 1 m² = 10000 so‘m (xohlasangiz o‘zgartiramiz) 
 
-    elif c.data == "done":
-        total = users[uid]["base"] + users[uid]["prp"] + users[uid]["meso"]
-        bot.edit_message_text(
-            f"🧾 JAMI SUMMA:\n💳 {fmt(total)} so‘m",
-            chat_id=c.message.chat.id,
-            message_id=c.message.message_id
+        bot.send_message(
+            message.chat.id,
+            f"📐 Gilam maydoni: {m2:.2f} m²\n"
+            f"💰 Taxminiy narx: {int(narx)} so‘m"
+        )
+    except:
+        bot.send_message(
+            message.chat.id,
+            "❌ Iltimos, to‘g‘ri yozing.\nMasalan: 2 3"
         )
 
-bot.polling(none_stop=True) 
+# --- BUYURTMA ---
+@bot.message_handler(func=lambda m: m.text == "📦 Buyurtma berish")
+def order_start(message):
+    bot.send_message(message.chat.id, "Ismingizni yozing:")
+    bot.register_next_step_handler(message, get_name)
 
+def get_name(message):
+    name = message.text
+    bot.send_message(message.chat.id, "Manzilingizni yozing:")
+    bot.register_next_step_handler(message, get_address, name)
+
+def get_address(message, name):
+    address = message.text
+    bot.send_message(message.chat.id,
+ "Telefon raqamingizni yozing:")
+    bot.register_next_step_handler(message, save_order, name, address)
+
+def save_order(message, name, address):
+    phone = message.text
+
+    order_text = (
+        f"🧾 YANGI BUYURTMA!\n\n"
+        f"👤 Ism: {name}\n"
+        f"🏠 Manzil: {address}\n"
+        f"📞 Telefon: {phone}"
+    )
+
+    # Faylga yozish
+    with open("orders.txt", "a", encoding="utf-8") as f:
+        f.write(order_text + "\n---\n")
+
+    # KLIENTGA javob
+    bot.send_message(
+        message.chat.id,
+        "✅ Buyurtmangiz qabul qilindi!\n"
+        "📞 G‘ijduvon Toza Gilam xodimlari tez orada siz bilan bog‘lanadi."
+    )
+
+    # SIZGA (ADMIN) XABAR BORADI
+    bot.send_message(ADMIN_ID, order_text)
+
+
+    with open("orders.txt", "a", encoding="utf-8") as f:
+        f.write(
+            f"Ism: {name}\n"
+            f"Manzil: {address}\n"
+            f"Telefon: {phone}\n"
+            f"---\n"
+        )
+
+    bot.send_message(
+        message.chat.id,
+        "✅ Buyurtmangiz qabul qilindi!\n"
+        "G‘ijduvon Toza Gilam xodimlari tez orada siz bilan bog‘lanadi 😊"
+    )
+
+print("Bot ishga tushdi...")
+bot.polling()

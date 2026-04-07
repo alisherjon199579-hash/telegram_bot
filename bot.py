@@ -40,10 +40,24 @@ def menu(message):
         bot.send_message(message.chat.id, "Operatorga yozing:")
         bot.register_next_step_handler(message, send_to_admin)
 
-    elif message.text == "ℹ️ Xizmatlar":
-        bot.send_message(message.chat.id, "🧼 Biz gilam yuvish xizmatini tez va sifatli bajaramiz 🚀")
+  elif message.text == "ℹ️ Xizmatlar":
+    text = """
+🧼 Xizmatlarimiz:
 
-# 🛒 BUYURTMA QISMI
+🟢 Gilam yuvish  
+🟢 Ko‘rpacha yuvish  
+🟢 Adyol yuvish  
+🟢 Yostiq yuvish  
+🟢 Mebel yuvish  
+🟢 Bruschatka yuvish  
+🟢 Fasad yuvish  
+🟢 Darvoza va shiftlarni yuvish  
+
+🚀 Tez va sifatli xizmat kafolati!
+"""
+    bot.send_message(message.chat.id, text)
+
+ # 🛒 BUYURTMA QISMI
 def get_name(message):
     name = message.text
     bot.send_message(message.chat.id, "Manzilingizni yozing:")

@@ -107,7 +107,7 @@ def get_width(message, length):
     try:
         width = float(message.text)
         area = length * width
-        price = area * 15000
+        price = area * 10000
 
         bot.send_message(message.chat.id, f"📏 {area} m²\n💰 Narxi: {price} so‘m")
     except:

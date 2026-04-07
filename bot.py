@@ -2,29 +2,25 @@ import telebot
 from telebot import types
 
 TOKEN = "8252134065:AAEAHlbftOBZ-z7iWmqbknOo9QQAUC4ijRo"
-ADMIN_ID = 282155346  # o'zingni telegram ID
+ADMIN_ID = 282155346
 
 bot = telebot.TeleBot(TOKEN)
 
-# 🔘 START MENU
+# 📦 vaqtincha saqlash (hisob natijasi)
+user_data = {}
+
+# 🔘 START
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
-    btn1 = types.KeyboardButton("🛒 Buyurtma berish")
-    btn2 = types.KeyboardButton("📏 Gilam m² hisoblash")
-    btn3 = types.KeyboardButton("📞 Telefon yuborish", request_contact=True)
-    btn4 = types.KeyboardButton("📍 Lokatsiya yuborish", request_location=True)
-    btn5 = types.KeyboardButton("👨‍💼 Operator")
-    btn6 = types.KeyboardButton("ℹ️ Xizmatlar")
+    markup.add("🛒 Buyurtma berish", "📏 Gilam m² hisoblash")
+    markup.add("📞 Telefon yuborish", "📍 Lokatsiya yuborish")
+    markup.add("👨‍💼 Operator", "ℹ️ Xizmatlar")
 
-    markup.add(btn1, btn2)
-    markup.add(btn3, btn4)
-    markup.add(btn5, btn6)
+    bot.send_message(message.chat.id, "👋 Xush kelibsiz!\nKerakli bo‘limni tanlang:", reply_markup=markup)
 
-    bot.send_message(message.chat.id, "Kerakli bo‘limni tanlang:", reply_markup=markup)
-
-# 🧠 MENU BOSHQARUV
+# 🧠 MENU
 @bot.message_handler(func=lambda message: True)
 def menu(message):
 
@@ -37,27 +33,34 @@ def menu(message):
         bot.register_next_step_handler(message, get_length)
 
     elif message.text == "👨‍💼 Operator":
-        bot.send_message(message.chat.id, "Operatorga yozing:")
+        bot.send_message(message.chat.id, "✍️ Operatorga yozing:")
         bot.register_next_step_handler(message, send_to_admin)
 
-  elif message.text == "ℹ️ Xizmatlar":
-    text = """
-🧼 Xizmatlarimiz:
+    elif message.text == "ℹ️ Xizmatlar":
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add("🧼 Gilam", "🛏 Ko‘rpacha")
+        markup.add("🛌 Adyol", "🪶 Yostiq")
+        markup.add("⬅️ Orqaga")
 
-🟢 Gilam yuvish  
-🟢 Ko‘rpacha yuvish  
-🟢 Adyol yuvish  
-🟢 Yostiq yuvish  
-🟢 Mebel yuvish  
-🟢 Bruschatka yuvish  
-🟢 Fasad yuvish  
-🟢 Darvoza va shiftlarni yuvish  
+        bot.send_message(message.chat.id, "Xizmatni tanlang:", reply_markup=markup)
 
-🚀 Tez va sifatli xizmat kafolati!
-"""
-    bot.send_message(message.chat.id, text)
+    elif message.text == "🧼 Gilam":
+        bot.send_message(message.chat.id, "Uzunligini yozing (metr):")
+        bot.register_next_step_handler(message, gilam_length)
 
- # 🛒 BUYURTMA QISMI
+    elif message.text == "🛏 Ko‘rpacha":
+        bot.send_message(message.chat.id, "💰 30 000 – 60 000 so‘m")
+
+    elif message.text == "🛌 Adyol":
+        bot.send_message(message.chat.id, "💰 60 000 so‘m")
+
+    elif message.text == "🪶 Yostiq":
+        bot.send_message(message.chat.id, "💰 25 000 so‘m")
+
+    elif message.text == "⬅️ Orqaga":
+        start(message)
+
+# 🛒 BUYURTMA
 def get_name(message):
     name = message.text
     bot.send_message(message.chat.id, "Manzilingizni yozing:")
@@ -71,32 +74,31 @@ def get_address(message, name):
 def save_order(message, name, address):
     phone = message.text
 
+    extra = ""
+    if message.chat.id in user_data:
+        data = user_data[message.chat.id]
+        extra = f"\n🧼 Gilam: {data['area']} m²\n💰 Narx: {data['price']} so‘m\n"
+
     order_text = f"""
 📥 YANGI BUYURTMA!
-
+{extra}
 👤 Ism: {name}
 🏠 Manzil: {address}
 📞 Telefon: {phone}
 """
 
-    # 📁 Faylga yozish
     with open("orders.txt", "a", encoding="utf-8") as f:
-        f.write(order_text + "\n-----------------\n")
+        f.write(order_text + "\n-----------\n")
 
-    # 👤 Mijozga javob
-    bot.send_message(
-        message.chat.id,
-        "✅ Buyurtmangiz qabul qilindi!\n📞 Tez orada siz bilan bog‘lanamiz 😊"
-    )
+    bot.send_message(message.chat.id, "✅ Buyurtma qabul qilindi!")
 
-    # 👨‍💼 Adminga yuborish
     bot.send_message(ADMIN_ID, order_text)
 
-# 📏 HISOBLASH
+# 📏 HISOB (umumiy)
 def get_length(message):
     try:
         length = float(message.text)
-        bot.send_message(message.chat.id, "Enini yozing (metr):")
+        bot.send_message(message.chat.id, "Enini yozing:")
         bot.register_next_step_handler(message, get_width, length)
     except:
         bot.send_message(message.chat.id, "❌ Raqam kiriting")
@@ -105,29 +107,63 @@ def get_width(message, length):
     try:
         width = float(message.text)
         area = length * width
-        bot.send_message(message.chat.id, f"📏 Maydon: {area} m²")
+        price = area * 15000
+
+        bot.send_message(message.chat.id, f"📏 {area} m²\n💰 Narxi: {price} so‘m")
     except:
         bot.send_message(message.chat.id, "❌ Raqam kiriting")
 
+# 🧼 GILAM MAXSUS HISOB
+def gilam_length(message):
+    try:
+        length = float(message.text)
+        bot.send_message(message.chat.id, "Enini yozing (metr):")
+        bot.register_next_step_handler(message, gilam_width, length)
+    except:
+        bot.send_message(message.chat.id, "❌ Raqam yozing")
+
+def gilam_width(message, length):
+    try:
+        width = float(message.text)
+        area = length * width
+        price = area * 10000
+
+        user_data[message.chat.id] = {
+            "area": area,
+            "price": price
+        }
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add("🛒 Buyurtma berish")
+
+        bot.send_message(
+            message.chat.id,
+            f"📏 Maydon: {area} m²\n💰 Narxi: {price} so‘m",
+            reply_markup=markup
+        )
+
+    except:
+        bot.send_message(message.chat.id, "❌ Raqam yozing")
+
 # 👨‍💼 OPERATOR
 def send_to_admin(message):
-    bot.send_message(ADMIN_ID, f"📩 Mijozdan:\n{message.text}")
-    bot.send_message(message.chat.id, "Xabaringiz yuborildi ✅")
+    bot.send_message(ADMIN_ID, f"📩 Mijoz:\n{message.text}")
+    bot.send_message(message.chat.id, "✅ Operatorga yuborildi")
 
-# 📞 TELEFON QABUL QILISH
+# 📞 TELEFON
 @bot.message_handler(content_types=['contact'])
 def contact_handler(message):
     phone = message.contact.phone_number
-    bot.send_message(message.chat.id, f"📞 Raqamingiz qabul qilindi: {phone}")
-    bot.send_message(ADMIN_ID, f"📞 Yangi telefon: {phone}")
+    bot.send_message(ADMIN_ID, f"📞 Telefon: {phone}")
+    bot.send_message(message.chat.id, "✅ Raqam olindi")
 
-# 📍 LOKATSIYA QABUL QILISH
+# 📍 LOKATSIYA
 @bot.message_handler(content_types=['location'])
 def location_handler(message):
     lat = message.location.latitude
     lon = message.location.longitude
-    bot.send_message(message.chat.id, "📍 Lokatsiya qabul qilindi!")
     bot.send_message(ADMIN_ID, f"📍 Lokatsiya:\n{lat}, {lon}")
+    bot.send_message(message.chat.id, "✅ Lokatsiya olindi")
 
-print("Bot ishga tushdi...")
+print("🚀 Bot ishga tushdi...")
 bot.polling()
